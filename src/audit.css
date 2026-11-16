@@ -1,0 +1,11 @@
+/* Targeted V1 audit fixes; original visual system remains in styles.css. */
+nav button{font-family:inherit;font-size:13px;font-weight:600}
+.btn{font-family:inherit;font-size:13px;font-weight:700}
+.search input{font-family:inherit;font-size:12px}
+.subject[role="button"]{cursor:pointer}
+.subject[role="button"]:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid #8c7cf0;outline-offset:3px}
+.resourcefoot button:disabled{color:#9299ac;cursor:not-allowed;opacity:.8}
+.emptyresources{padding:22px;border:1px dashed #d9dced;border-radius:12px;color:#737d95;font-size:13px}
+.privacy{padding-top:20px;padding-bottom:55px}
+.privacy h2{font-size:25px;margin:10px 0}
+.privacy p{max-width:850px;font-size:12px;line-height:1.8;color:#68728a}
