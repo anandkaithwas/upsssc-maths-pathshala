@@ -41,3 +41,12 @@ Checkout, payment verification, student authentication, admin content management
 
 ## Cost
 This starter has no paid dependencies. Cloudflare and GitHub free tiers have quotas and terms. Domain registration, payment processing and some third-party services may cost money; zero infrastructure cost is not a guarantee of zero operating cost.
+
+## Student accounts and progress (Supabase)
+1. Create a Supabase project.
+2. In Supabase SQL Editor, run `supabase/schema.sql`.
+3. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from `.env.example` in local development and Cloudflare Pages environment variables.
+4. Enable email/password authentication and configure the email confirmation redirect URL for your deployed site.
+5. Redeploy after setting environment variables.
+
+The browser uses only the Supabase anon/publishable key. Never expose the service-role key. Row Level Security limits quiz-attempt reads and inserts to the authenticated student's own user ID. The current prototype saves the subject quiz attempts; the full topic/question-bank dashboard and historical charts are follow-on work. Supabase is configured by the project owner; account creation remains unavailable until valid environment variables and SQL schema are installed.
