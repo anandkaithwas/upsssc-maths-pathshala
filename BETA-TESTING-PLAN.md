@@ -1,52 +1,72 @@
-# UPSSSC Maths Pathshala — Student Beta Plan
+# UPSSSC Maths Pathshala — Private Student Beta Plan
 
 ## Purpose
-Run a free, feedback-led pilot with 25–30 real aspirants before introducing payments or expanding the platform.
+Run a free, invite-only pilot for 25–30 real aspirants. Login is required to access the learning area. No payments or subscriptions are enabled.
 
-## Beta promise
-- No fees, paid plans, subscriptions, checkout, or payment collection during the pilot.
-- Existing free sample quizzes and resources remain accessible.
-- Anything labelled preview or coming soon must not be represented as a working downloadable product.
-- Do not request passwords, payment details, Aadhaar/PAN, or unnecessary personal data from testers.
+## Access model
+- Each tester gets an individual Supabase Auth account created/invited by the project owner from the Supabase Dashboard.
+- Public self-registration must be disabled in the dedicated staging Supabase project.
+- Share invitations only with the selected testers. Never share one common username/password.
+- Students sign in with their invited email and their own password. Password reset is available.
+- The public landing/login screen remains visible; learning content, resources and in-app beta feedback are gated until a valid session exists.
+- If Supabase staging configuration is absent, the learning area remains locked. Do not bypass the gate or use fake/demo login.
+- Do not put service-role keys or invitation secrets in frontend code or GitHub.
 
-## Suggested four-week pilot
-1. Week 1 — Access and usability: test on Android phones, slow networks, and common browsers.
-2. Week 2 — Learning quality: check question accuracy, answer keys, explanations, Hindi clarity, and topic usefulness.
-3. Week 3 — Practice experience: test quiz flow, result screens, login (only if staging Supabase is configured), and progress sync.
+## Supabase staging setup (owner action)
+1. Create/use a dedicated staging Supabase project; do not use production.
+2. Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as staging build environment variables in Cloudflare Pages.
+3. Apply the repository's staging schema/migrations to that staging project only.
+4. In Supabase Authentication settings, turn off public sign-ups. Keep email auth enabled.
+5. Configure the allowed Site URL and redirect URLs to the exact staging preview/custom domain.
+6. From Authentication → Users, invite/create each selected student's account using their own email. Do not collect or share their passwords.
+7. Test invitation acceptance, password setup/reset, sign-in, sign-out, and persistence in a private browser session.
+8. Confirm quiz progress RPC writes only for the signed-in user and that one student cannot read another student's attempts.
+9. Verify a logged-out browser cannot see learning content, resources, or the beta feedback panel.
+
+## Four-week pilot
+1. Week 1 — Access and usability: invite accounts, test login, mobile layouts and slow networks.
+2. Week 2 — Learning quality: review every live question, answer key, explanation and Hindi wording.
+3. Week 3 — Practice experience: test quiz flow, results, progress sync, logout and password reset.
 4. Week 4 — Retest fixes and collect final feedback.
 
 ## Tester tasks
-- Open the homepage and navigate to each subject.
+- Open the staging link and log in using their own invitation.
+- Navigate all available subjects and topic cards.
 - Attempt every available subject quiz and the general mini-test.
-- Read each explanation and flag any incorrect or unclear answer.
+- Read explanations and flag incorrect or unclear answers.
 - Search the resource catalogue.
-- If test accounts are enabled, create an account, sign out/in, and check whether progress is retained.
-- Repeat on a mobile device and report layout, speed, or accessibility problems.
+- Sign out and back in; verify progress remains associated with their account.
+- Try on an Android phone and report layout, speed and navigation problems.
 - Submit feedback using the on-page beta feedback panel.
 
-## Feedback fields
-Ask for an overall rating, the feature being reviewed, the device/browser (optional), a description of the issue, and what the student expected instead. Avoid collecting personal identifiers.
+## Privacy and safety
+- Do not ask testers to share passwords, OTPs, payment details, Aadhaar/PAN, or unnecessary personal information.
+- Use test accounts with minimum required profile data.
+- Keep Supabase service-role keys server-side only.
+- Do not use production student data in staging.
+- Explain in the privacy notice what account and quiz data is stored, why, and how to request deletion.
+- Feedback panel prepares text locally for the student to copy; it does not upload or store the response.
 
 ## Release gates
-Do not invite testers to rely on the site for high-stakes exam preparation until:
-- all published questions and explanations are independently checked;
-- the build passes;
-- core navigation and quiz flows pass manual tests;
-- authentication/progress are tested against a dedicated staging Supabase project or clearly labelled unavailable;
-- privacy notice accurately describes the actual data flows;
-- the staging preview is deployed and verified.
+Do not invite students until:
+- staging preview is deployed and verified;
+- public sign-up is disabled and invitations work;
+- logged-out content gating is verified;
+- quiz progress is isolated per user and tested;
+- every question and explanation shown in the pilot is educator-reviewed;
+- build, core navigation, mobile and authentication tests pass;
+- privacy notice matches actual data flows.
 
-## Known limitations at pilot start
-- The question bank is a small sample, not a comprehensive exam question bank.
-- Topic cards may be roadmap placeholders rather than complete lessons.
-- Resource catalogue cards are previews; no paid checkout or premium delivery exists.
-- Quiz questions and answers are present in the frontend bundle. Treat current quizzes as practice/demo content, not secure high-stakes assessments.
-- Feedback copy action does not submit feedback to a server. Students must share the copied text with the pilot coordinator through the agreed channel.
+## Known limitations
+- Current question bank is a small sample, not comprehensive exam coverage.
+- Topic cards may be roadmap placeholders rather than finished lessons.
+- Resource catalogue entries are previews; no paid checkout or premium delivery exists.
+- Feedback copy action does not submit feedback to a server.
+- Quiz content currently exists in the frontend bundle; current questions are low-stakes practice/demo content, not secure high-stakes assessments.
 
 ## Success measures
-Track completion and quality, not vanity metrics:
-- 25–30 testers invited; target at least 20 active testers.
-- At least 70% complete the core quiz/navigation tasks.
-- Every reported incorrect answer is reviewed.
-- Categorise and prioritise feedback by severity and frequency.
-- Resolve all critical navigation, scoring, privacy, and mobile usability defects before wider release.
+- Invite 25–30 testers; target at least 20 active testers.
+- At least 70% complete core quiz/navigation tasks.
+- Track login failures, password-reset issues and mobile defects.
+- Review every reported incorrect answer.
+- Resolve all critical access, scoring, privacy and mobile usability defects before wider release.
