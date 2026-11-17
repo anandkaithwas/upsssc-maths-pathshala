@@ -3,7 +3,6 @@ import { getProgress, supabase, supabaseReady } from "../lib/supabase.js";
 
 export default function AuthPanel({ onSessionChange }) {
   const [session, setSession] = useState(null);
-  const [mode, setMode] = useState("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -52,26 +51,21 @@ export default function AuthPanel({ onSessionChange }) {
     if (!supabase) return;
     setBusy(true); setMessage("");
     try {
-      if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
-        if (error) throw error;
-        setMessage(data.session ? "Account बन गया। आप signed in हैं।" : "Verification email भेजा गया है। Email verify करके login करें।");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-        if (error) throw error;
-        setMessage("Login सफल रहा।");
-      }
-    } catch (error) { setMessage(error.message || "Authentication असफल रहा।"); }
-    finally { setBusy(false); }
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) throw error;
+      setMessage("Login सफल रहा।");
+    } catch (error) {
+      setMessage(error.message || "Login असफल रहा। केवल आमंत्रित students ही login कर सकते हैं।");
+    } finally { setBusy(false); }
   }
 
   async function resetPassword() {
-    if (!email.trim()) { setMessage("पहले अपना email address दर्ज करें।"); return; }
+    if (!email.trim()) { setMessage("पहले अपना invitation वाला email address दर्ज करें।"); return; }
     setBusy(true); setMessage("");
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin });
       if (error) throw error;
-      setMessage("Password reset link भेज दिया गया है। अपना email देखें।");
+      setMessage("यदि इस email पर account मौजूद है, तो password reset link भेज दिया गया है। अपना email देखें।");
     } catch (error) { setMessage(error.message || "Password reset request असफल रहा।"); }
     finally { setBusy(false); }
   }
@@ -84,15 +78,13 @@ export default function AuthPanel({ onSessionChange }) {
   }
 
   return <section className="account-wrap wrap" id="account"><div className="account-card">
-    <div className="account-copy"><span className="eyebrow">YOUR LEARNING, SAVED</span><h2>अपनी तैयारी का progress track करें</h2><p>Free account बनाकर quiz attempts, accuracy और learning history सुरक्षित रखें।</p>
+    <div className="account-copy"><span className="eyebrow">PRIVATE STUDENT BETA</span><h2>अपने account से login करें</h2><p>यह 25–30 चुने हुए students के लिए सीमित beta है। Login के बाद ही learning area खुलेगा। Account केवल invitation से मिलेगा।</p>
       {session?.user && <div className="account-stats"><div><b>{progress.attempted}</b><small>Attempted</small></div><div><b>{progress.correct}</b><small>Correct</small></div><div><b>{progress.accuracy}%</b><small>Accuracy</small></div></div>}
     </div>
     <div className="account-form">
-      {!supabaseReady ? <div className="setup-note"><b>Account setup pending</b><p>Staging Supabase project configure होने पर registration और progress sync चालू होंगे।</p></div>
-      : session ? <div className="signed-in"><b>नमस्ते!</b><p>{session.user.email}</p><p className="account-muted">आपका progress इस account से sync होगा।</p><button className="btn secondary small" type="button" onClick={signOut} disabled={busy}>Logout</button></div>
-      : <><div className="auth-tabs"><button type="button" className={mode === "signin" ? "active" : ""} onClick={() => { setMode("signin"); setMessage(""); }}>Login</button><button type="button" className={mode === "signup" ? "active" : ""} onClick={() => { setMode("signup"); setMessage(""); }}>Create account</button></div>
-        <form onSubmit={submit}><label>Email<input type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></label><label>Password<input type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} minLength="8" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="कम से कम 8 characters" /></label><button className="btn primary" disabled={busy}>{busy ? "Please wait…" : mode === "signup" ? "Create free account" : "Login"}</button></form>
-        {mode === "signin" && <button type="button" className="link" onClick={resetPassword} disabled={busy}>Forgot password?</button>}</>}
+      {!supabaseReady ? <div className="setup-note"><b>Beta login setup pending</b><p>Staging Supabase project configure होने के बाद invited students login कर पाएँगे। अभी student access बंद है।</p></div>
+      : session ? <div className="signed-in"><b>नमस्ते!</b><p>{session.user.email}</p><p className="account-muted">आपका learning progress इस account से sync होगा।</p><button className="btn secondary small" type="button" onClick={signOut} disabled={busy}>Logout</button></div>
+      : <><form onSubmit={submit}><label>Invitation वाला email<input type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></label><label>Password<input type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="अपना account password" /></label><button className="btn primary" disabled={busy}>{busy ? "Please wait…" : "Login to free beta"}</button></form><p className="invite-only-note">Account नहीं है? Pilot coordinator से invitation माँगें। Public registration बंद है।</p><button type="button" className="link" onClick={resetPassword} disabled={busy}>Forgot password?</button></>}
       {message && <p className="auth-message" role="status">{message}</p>}
     </div>
   </div></section>;
