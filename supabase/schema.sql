@@ -55,7 +55,9 @@ create policy "Students can read their own attempts"
  on public.quiz_attempts for select to authenticated
  using (auth.uid() = user_id);
 drop policy if exists "Students can insert their own attempts" on public.quiz_attempts;
-revoke insert, update, delete on public.quiz_attempts from anon, authenticated;
+-- Start from no table privileges, then grant only authenticated own-row reads.
+-- RLS remains the row-level boundary; grants are the table-level boundary.
+revoke all on public.quiz_attempts from public, anon, authenticated;
 grant select on public.quiz_attempts to authenticated;
 
 create or replace function public.record_quiz_attempt(
