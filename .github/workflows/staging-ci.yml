@@ -1,11 +1,11 @@
-name: Staging CI
+name: Homepage Staging CI
 on:
   push:
     branches:
-      - audit/staging-hardening-v1
+      - audit/homepage-modern-v1
   pull_request:
     branches:
-      - audit/staging-hardening-v1
+      - audit/homepage-modern-v1
 jobs:
   build:
     runs-on: ubuntu-latest

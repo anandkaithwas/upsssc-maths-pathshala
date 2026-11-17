@@ -3,7 +3,7 @@ name: Deploy isolated Cloudflare Pages preview
 on:
   push:
     branches:
-      - audit/staging-hardening-v1
+      - audit/homepage-modern-v1
   workflow_dispatch:
 
 permissions:
@@ -15,14 +15,14 @@ concurrency:
 
 jobs:
   deploy-preview:
-    if: github.ref == 'refs/heads/audit/staging-hardening-v1'
+    if: github.ref == 'refs/heads/audit/homepage-modern-v1'
     runs-on: ubuntu-latest
     environment: staging
     steps:
-      - name: Checkout staging branch only
+      - name: Checkout homepage staging branch only
         uses: actions/checkout@v4
         with:
-          ref: audit/staging-hardening-v1
+          ref: audit/homepage-modern-v1
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -49,4 +49,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=upsssc-maths-pathshala-staging --branch=audit-staging-hardening-v1
+          command: pages deploy dist --project-name=upsssc-maths-pathshala-staging --branch=audit-homepage-modern-v1
