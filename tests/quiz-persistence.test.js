@@ -39,7 +39,16 @@ test("all general mini-test questions have server-side answer-key entries", () =
     "240 का 25% कितना है?",
     "यदि 3 : 5 = x : 20, तो x क्या है?",
     "₹800 की वस्तु ₹920 में बेची। लाभ प्रतिशत?",
+    "480 का 15% कितना है?",
+    "श्रृंखला पूरी करें: 2, 6, 12, 20, 30, ?",
+    "यदि CAT को DBU लिखा जाता है, तो DOG को कैसे लिखा जाएगा?",
+    "‘अग्नि’ का पर्यायवाची शब्द कौन-सा है?",
+    "‘उन्नति’ का विलोम शब्द क्या है?",
+    "भारतीय संविधान सभा ने संविधान को कब अंगीकृत किया?",
+    "सौरमंडल का सबसे बड़ा ग्रह कौन-सा है?",
   ];
+  assert.match(app, /const questions=\\[\\s*\\{[\\s\\S]*?\\}\\s*\\];/);
+  assert.equal((app.match(/\\{q:/g) || []).length >= 10, true);
   for (const question of questions) {
     assert.ok(app.includes(question), `frontend question missing: ${question}`);
     assert.ok(schema.includes(question), `server answer key missing: ${question}`);
