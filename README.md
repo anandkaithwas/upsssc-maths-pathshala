@@ -36,7 +36,7 @@ The workflow only runs for this exact audit branch, hard-checks the dedicated st
 Use a dedicated Supabase staging project. Apply `supabase/schema.sql` in its SQL Editor, then set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the GitHub Actions staging environment as repository/environment variables if runtime account features are being tested. Never put a Supabase service-role key in browser variables.
 
 ## Current prototype scope
-Responsive landing page, four subject sample quizzes, general mini test, searchable resource catalogue, premium storefront placeholders, optional email/password account and progress panel. Payments, paid-file delivery and admin CMS are not enabled.
+Responsive landing page, subject quizzes, general mini test, searchable resource catalogue, 30-question PDF worksheet generator (verified bank + deterministic variations), optional email/password account and progress panel. AI-provider integration, payment verification, paid-file delivery and admin CMS are not enabled.
 
 ## Security limitations before production
 - Sample questions, options and correct answers are shipped in the frontend bundle so the prototype can render instant explanations. This is not suitable for high-stakes assessments. A production exam engine must fetch questions/options from a trusted backend and validate submissions server-side without exposing answer keys.
@@ -49,3 +49,7 @@ The build workflow is isolated to the audit branch and a separately named Cloudf
 
 ## Commerce
 Checkout, payment verification, paid-file delivery, admin CMS, complete privacy policy, terms and refund workflow are not implemented. Do not accept payments or put paid PDFs in public static assets until secure server-side access controls are in place.
+
+
+## Automated PDF worksheet generator (staging)
+The worksheet builder defaults to 30 questions, supports mixed or subject-specific practice, increases difficulty across each worksheet, and includes answer key and explanations in the same PDF. It uses a verified sample bank plus deterministic arithmetic variations; it does not call an external AI model. Adaptive difficulty based on server-verified student performance and paid entitlements require backend configuration and are not represented as active in this prototype. Freemium currently means up to 30 downloadable questions per worksheet; no payment or premium gate is active.
