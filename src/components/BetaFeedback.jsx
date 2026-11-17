@@ -54,6 +54,9 @@ export default function BetaFeedback() {
         </label>
       </div>
       <button className="btn primary" type="button" onClick={copyFeedback}>Copy feedback to share</button>
+      <label className="beta-output-label">Feedback preview (you can also select and copy this text)
+        <textarea className="beta-feedback-output" rows="5" readOnly value={feedbackText}/>
+      </label>
       {status && <p className="beta-feedback-status" role="status">{status}</p>}
       <p className="beta-privacy-note">This form does not upload or store your feedback. It only prepares text on your device for you to share. Do not include personal or sensitive information.</p>
     </div>
