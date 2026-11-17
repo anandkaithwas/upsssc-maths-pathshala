@@ -53,8 +53,9 @@ Checkout, payment verification, paid-file delivery, admin CMS, complete privacy 
 
 ## Free student beta (current operating mode)
 - Product direction: complete competitive-exam preparation platform for aspirants across major government examinations.
-- Immediate pilot: 25–30 students, with a suggested four-week feedback cycle.
+- Immediate pilot: 25–30 students, invite-only login, with a suggested four-week feedback cycle.
 - All currently available features are free during the pilot. No payment gateway, checkout, paid membership, or subscription should be enabled.
 - Follow `BETA-TESTING-PLAN.md` for tester tasks, privacy cautions, release gates, and success measures.
 - The on-page feedback panel prepares a feedback message for the student to copy and share; it does not transmit or store feedback.
+- Public self-registration is disabled in the dedicated staging Supabase project; owner invites each tester individually.
 - Do not advertise placeholder resources or roadmap topics as completed learning products.
