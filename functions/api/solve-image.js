@@ -47,7 +47,7 @@ export async function onRequestPost({ request, env }) {
   if (!questionText && (!image.startsWith("data:image/") || image.length > MAX_IMAGE_CHARS)) {
     return reply(400, { error: "Upload a supported image under 8 MB, or enter the recognised question." });
   }
-  if (image && !/^data:image\/(jpeg|png|webp|heic|heif);base64,/i.test(image)) {
+  if (image && !/^data:image\/(jpeg|png|webp);base64,/i.test(image)) {
     return reply(400, { error: "Unsupported image format." });
   }
 

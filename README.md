@@ -59,3 +59,19 @@ Checkout, payment verification, paid-file delivery, admin CMS, complete privacy 
 - The on-page feedback panel prepares a feedback message for the student to copy and share; it does not transmit or store feedback.
 - Public self-registration is disabled in the dedicated staging Supabase project; owner invites each tester individually.
 - Do not advertise placeholder resources or roadmap topics as completed learning products.
+
+
+## Maths Camera (feature branch)
+
+The Maths Camera UI and Cloudflare Pages Function are added on `feature/math-camera-v1`. Students must sign in. The browser sends the captured image to `/api/solve-image`; the Pages Function verifies the Supabase access token and calls the OpenAI Responses API. The OpenAI key is never exposed in the browser.
+
+Configure these Cloudflare Pages **staging** environment variables before testing:
+
+- `OPENAI_API_KEY` — secret; add through Cloudflare Pages settings, never commit it.
+- `SUPABASE_URL` — staging Supabase project URL.
+- `SUPABASE_ANON_KEY` — staging Supabase anon/public key.
+- `OPENAI_VISION_MODEL` — optional; defaults to `gpt-4.1-mini`.
+
+The camera accepts JPEG, PNG and WEBP images up to 8 MB. Handwritten recognition is best-effort: students can edit the transcribed question before asking for a corrected solution. The solver returns steps, final answer, confidence and caveats. It is not yet validated for all handwriting, complex geometry diagrams or multi-question pages.
+
+**Before staging enablement:** configure Cloudflare rate limiting/usage controls for `/api/solve-image`, set an OpenAI project budget, verify allowed model access and image formats, test authentication and error paths, and add cost/abuse monitoring. This branch has not been deployed or end-to-end tested.
