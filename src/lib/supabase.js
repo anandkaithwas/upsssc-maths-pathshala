@@ -23,6 +23,14 @@ export async function saveAttempt({ questionText, selectedOption }) {
   if (typeof window !== "undefined") window.dispatchEvent(new Event("quiz-attempt-saved"));
 }
 
+export async function saveAttempts(answers) {
+ if (!supabase) return;
+ if (!Array.isArray(answers)||answers.length<1||answers.length>50||answers.some(x=>typeof x?.questionText!=="string"||!x.questionText.trim()||!Number.isInteger(x.selectedOption)||x.selectedOption<0||x.selectedOption>3)) throw new Error("Invalid quiz answers.");
+ const {error}=await supabase.rpc("record_quiz_attempts",{p_answers:answers.map(({questionText,selectedOption})=>({question_text:questionText,selected_option:selectedOption}))});
+ if(error) throw error;
+ if(typeof window!=="undefined") window.dispatchEvent(new Event("quiz-attempt-saved"));
+}
+
 export async function getProgress(userId) {
   if (!supabase || !userId) return { attempted: 0, correct: 0, accuracy: 0 };
   const { data, error } = await supabase.rpc("get_quiz_progress");

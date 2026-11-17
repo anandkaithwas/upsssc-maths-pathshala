@@ -29,7 +29,10 @@ insert into private.quiz_answer_key (question_text, subject, correct_option) val
 ('भारतीय संविधान सभा ने संविधान को कब अंगीकृत किया?','सामान्य अध्ययन',2),
 ('भारत का राष्ट्रीय पशु कौन-सा है?','सामान्य अध्ययन',1),
 ('सौरमंडल का सबसे बड़ा ग्रह कौन-सा है?','सामान्य अध्ययन',2),
-('उत्तर प्रदेश की राजधानी क्या है?','सामान्य अध्ययन',3)
+('उत्तर प्रदेश की राजधानी क्या है?','सामान्य अध्ययन',3),
+('240 का 25% कितना है?','गणित',2),
+('यदि 3 : 5 = x : 20, तो x क्या है?','गणित',1),
+('₹800 की वस्तु ₹920 में बेची। लाभ प्रतिशत?', 'गणित',2)
 on conflict (question_text) do update set
  subject = excluded.subject,
  topic = excluded.topic,
@@ -108,3 +111,23 @@ as $$
 $$;
 revoke all on function public.get_quiz_progress() from public, anon;
 grant execute on function public.get_quiz_progress() to authenticated;
+
+
+-- Persist a completed mini-test atomically using the private server-side answer key.
+create or replace function public.record_quiz_attempts(p_answers jsonb)
+returns void language plpgsql security definer set search_path=pg_catalog,public,private as $$
+declare item jsonb; answer private.quiz_answer_key%rowtype; selected integer; question text;
+begin
+ if auth.uid() is null then raise exception 'Authentication required'; end if;
+ if p_answers is null or jsonb_typeof(p_answers) is distinct from 'array' or jsonb_array_length(p_answers)<1 or jsonb_array_length(p_answers)>50 then raise exception 'Invalid quiz answer batch'; end if;
+ for item in select value from jsonb_array_elements(p_answers) loop
+  question:=item->>'question_text';
+  begin selected:=(item->>'selected_option')::integer; exception when others then raise exception 'Invalid selected option'; end;
+  if question is null or length(trim(question))=0 or selected is null or selected<0 or selected>3 then raise exception 'Invalid quiz answer'; end if;
+  select * into answer from private.quiz_answer_key where question_text=question;
+  if not found then raise exception 'Unknown quiz question'; end if;
+  insert into public.quiz_attempts(user_id,subject,topic,question_text,selected_option,correct_option,is_correct) values(auth.uid(),answer.subject,answer.topic,answer.question_text,selected,answer.correct_option,selected=answer.correct_option);
+ end loop;
+end; $$;
+revoke all on function public.record_quiz_attempts(jsonb) from public,anon;
+grant execute on function public.record_quiz_attempts(jsonb) to authenticated;
