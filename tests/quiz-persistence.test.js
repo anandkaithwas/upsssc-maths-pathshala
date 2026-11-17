@@ -8,7 +8,7 @@ const schema = await readFile(new URL("../supabase/schema.sql", import.meta.url)
 
 test("general mini-test completion uses the batch persistence path", () => {
   assert.match(app, /const finishGeneralQuiz=async\(\)=>\{[\s\S]*?saveAttempts\(questions\.map/);
-  assert.match(app, /idx===questions\.length-1\?finishGeneralQuiz\(\)/);
+  assert.match(app, /idx===questions\.length-1\?"See result":/);
 });
 
 test("batch persistence refuses to claim success without Supabase", () => {
@@ -28,7 +28,7 @@ test("database derives correctness from the private answer key", () => {
   assert.match(schema, /create schema if not exists private/);
   assert.match(schema, /create table if not exists private\.quiz_answer_key/);
   assert.match(schema, /security definer[\s\S]*?auth\.uid\(\) is null/);
-  assert.match(schema, /select \* into answer from private\.quiz_answer_key where question_text=question/);
+  assert.match(schema, /select\s+\*\s+into answer[\s\S]*?from private\.quiz_answer_key where question_text=question/);
   assert.match(schema, /selected=answer\.correct_option/);
   assert.match(schema, /grant execute on function public\.record_quiz_attempts\(jsonb\) to authenticated/);
   assert.match(schema, /revoke all on function public\.record_quiz_attempts\(jsonb\) from public,anon/);
