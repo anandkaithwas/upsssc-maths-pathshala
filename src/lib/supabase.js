@@ -1,11 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
+
 const url = import.meta.env.VITE_SUPABASE_URL;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const supabaseReady = Boolean(url && anonKey);
-export const supabase = supabaseReady ? createClient(url, anonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
+export const supabase = supabaseReady
+  ? createClient(url, anonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } })
+  : null;
 
-// The database resolves correctness from its private answer key. Never send claimed
-// correct_option or is_correct values from the browser.
+// Correctness is derived by the database. The browser sends only the question
+// identifier/text and the selected option, never a claimed score.
 export async function saveAttempt({ questionText, selectedOption }) {
   if (!supabase) return;
   if (typeof questionText !== "string" || !questionText.trim() ||
@@ -21,13 +24,9 @@ export async function saveAttempt({ questionText, selectedOption }) {
 
 export async function getProgress(userId) {
   if (!supabase || !userId) return { attempted: 0, correct: 0, accuracy: 0 };
-  const [allRows, correctRows] = await Promise.all([
-    supabase.from("quiz_attempts").select("id", { count: "exact", head: true }).eq("user_id", userId),
-    supabase.from("quiz_attempts").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("is_correct", true),
-  ]);
-  if (allRows.error) throw allRows.error;
-  if (correctRows.error) throw correctRows.error;
-  const attempted = allRows.count ?? 0;
-  const correct = correctRows.count ?? 0;
+  const { data, error } = await supabase.rpc("get_quiz_progress");
+  if (error) throw error;
+  const attempted = Number(data?.attempted ?? 0);
+  const correct = Number(data?.correct ?? 0);
   return { attempted, correct, accuracy: attempted ? Math.round(correct / attempted * 100) : 0 };
 }
