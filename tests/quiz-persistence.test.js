@@ -47,8 +47,12 @@ test("all general mini-test questions have server-side answer-key entries", () =
     "भारतीय संविधान सभा ने संविधान को कब अंगीकृत किया?",
     "सौरमंडल का सबसे बड़ा ग्रह कौन-सा है?",
   ];
-  assert.match(app, /const questions=\\[\\s*\\{[\\s\\S]*?\\}\\s*\\];/);
-  assert.equal((app.match(/\\{q:/g) || []).length >= 10, true);
+  const start = app.indexOf("const questions=[");
+  const end = app.indexOf("];", start);
+  assert.notEqual(start, -1, "general question bank must exist");
+  assert.notEqual(end, -1, "general question bank must close");
+  const generalBank = app.slice(start, end);
+  assert.equal((generalBank.match(/\\{q:/g) || []).length, 10, "general mini-test must contain exactly ten questions");
   for (const question of questions) {
     assert.ok(app.includes(question), `frontend question missing: ${question}`);
     assert.ok(schema.includes(question), `server answer key missing: ${question}`);
