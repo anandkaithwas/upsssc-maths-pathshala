@@ -26,6 +26,16 @@ export default function AuthPanel({ onSessionChange }) {
   }, [onSessionChange]);
 
   useEffect(() => {
+    if (!session?.user) return undefined;
+    let active = true;
+    const refresh = () => getProgress(session.user.id)
+      .then((value) => { if (active) setProgress(value); })
+      .catch(() => { if (active) setMessage("Progress load नहीं हो सका।"); });
+    window.addEventListener("quiz-attempt-saved", refresh);
+    return () => { active = false; window.removeEventListener("quiz-attempt-saved", refresh); };
+  }, [session]);
+
+  useEffect(() => {
     let active = true;
     if (!session?.user) {
       setProgress({ attempted: 0, correct: 0, accuracy: 0 });

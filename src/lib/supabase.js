@@ -20,6 +20,7 @@ export async function saveAttempt({ questionText, selectedOption }) {
     p_selected_option: selectedOption,
   });
   if (error) throw error;
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("quiz-attempt-saved"));
 }
 
 export async function getProgress(userId) {
