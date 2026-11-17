@@ -27,3 +27,10 @@
 
 .beta-output-label{display:grid;gap:7px;margin-top:14px;color:#535e77;font-size:11px;font-weight:700}
 .beta-feedback-output{width:100%;padding:11px;border:1px solid #dfe2ec;border-radius:9px;background:#fff;color:#5c667c;font:inherit;font-size:11px;line-height:1.5;resize:vertical}
+
+.invite-only-note{margin:12px 0 4px;color:#66718a;font-size:12px;line-height:1.6}
+.beta-locked{min-height:42vh;display:grid;place-items:center;padding-top:32px;padding-bottom:42px}
+.beta-locked-card{width:min(100%,620px);padding:clamp(22px,5vw,42px);border:1px solid #e2e7f0;border-radius:20px;background:#fbfcff;text-align:center}
+.beta-locked-card h1{font-size:clamp(26px,5vw,38px);color:#1b2543;margin:12px 0}
+.beta-locked-card p{color:#69758b;font-size:14px;line-height:1.7}
+.beta-locked-help{margin-top:16px!important;font-size:12px!important}
