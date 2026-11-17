@@ -50,7 +50,7 @@ function buildQuestions(subject,count,adaptive){
  const output=[];
  for(let i=0;i<count;i++){
    const ratio=(i+1)/count;
-   const level=ratio<=.34?"basic":ratio<=.67?"moderate":"challenging";
+   const first=adaptive==="advanced"?.2:adaptive==="foundation"?.45:.34;\n   const second=adaptive==="advanced"?.5:adaptive==="foundation"?.75:.67;\n   const level=ratio<=first?"basic":ratio<=second?"moderate":"challenging";
    if(subject==="गणित"||subject==="मिश्रित"&&i%4===0){
      output.push({...makeMathVariant(level,i),subject:"गणित",level,source:"generated-variation"});
    }else{
@@ -63,7 +63,7 @@ function buildQuestions(subject,count,adaptive){
 }
 export default function WorksheetGenerator({user}){
  const [subject,setSubject]=useState("मिश्रित"),[count,setCount]=useState(30),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[lastScore,setLastScore]=useState(0);
- const [answers,setAnswers]=useState({});
+ const [lastScore,setLastScore]=useState(()=>Number(localStorage.getItem("ump-worksheet-score")||60));
  const freeLimit=30;
  const generate=()=>{
    setBusy(true);setNotice("");
@@ -112,5 +112,5 @@ export default function WorksheetGenerator({user}){
    }catch(error){setNotice("PDF नहीं बन सकी। कृपया दोबारा प्रयास करें।");}
    finally{setBusy(false);}
  };
- return <div className="worksheet-panel"><div className="eyebrow">AUTOMATED PRACTICE BUILDER</div><h2>अपनी PDF Worksheet बनाएं</h2><p>विषय चुनें, प्रश्नों की संख्या तय करें और डाउनलोड करें। उत्तर व समाधान उसी PDF में मिलेंगे।</p><div className="worksheet-controls"><label>विषय<select value={subject} onChange={e=>setSubject(e.target.value)}><option>मिश्रित</option>{Object.keys(bank).map(x=><option key={x}>{x}</option>)}</select></label><label>प्रश्नों की संख्या<select value={count} onChange={e=>setCount(Number(e.target.value))}>{[10,20,30].map(n=><option key={n} value={n}>{n} प्रश्न</option>)}</select></label></div><div className="difficulty-track"><span>आसान</span><i/><span>मध्यम</span><i/><span>चुनौतीपूर्ण</span></div><div className="worksheet-meta"><span>✓ कठिनाई क्रमशः बढ़ेगी</span><span>✓ Freemium: 30 प्रश्न तक मुफ़्त</span><span>✓ प्रश्न + समाधान एक PDF में</span></div><button className="btn primary" type="button" disabled={busy} onClick={generate}>{busy?"PDF तैयार हो रही है…":"PDF Worksheet डाउनलोड करें ↓"}</button>{notice&&<p className="worksheet-notice" role="status">{notice}</p>}<small className="worksheet-disclaimer">नोट: वर्तमान hybrid mode सत्यापित स्थिर प्रश्न बैंक और नियम-आधारित गणित variations का उपयोग करता है। बाहरी AI API/paid premium entitlement अभी configure नहीं है; PYQ के रूप में AI-generated प्रश्न प्रस्तुत नहीं किए जाते।</small></div>;
+ return <div className="worksheet-panel"><div className="eyebrow">AUTOMATED PRACTICE BUILDER</div><h2>अपनी PDF Worksheet बनाएं</h2><p>विषय चुनें, प्रश्नों की संख्या तय करें और डाउनलोड करें। उत्तर व समाधान उसी PDF में मिलेंगे।</p><div className="worksheet-controls"><label>पिछली worksheet में आपकी accuracy<select value={lastScore} onChange={e=>{const value=Number(e.target.value);setLastScore(value);localStorage.setItem("ump-worksheet-score",String(value));}}><option value="20">40% से कम</option><option value="60">40–74%</option><option value="80">75% या अधिक</option></select></label><label>विषय<select value={subject} onChange={e=>setSubject(e.target.value)}><option>मिश्रित</option>{Object.keys(bank).map(x=><option key={x}>{x}</option>)}</select></label><label>प्रश्नों की संख्या<select value={count} onChange={e=>setCount(Number(e.target.value))}>{[10,20,30].map(n=><option key={n} value={n}>{n} प्रश्न</option>)}</select></label></div><div className="difficulty-track"><span>आसान</span><i/><span>मध्यम</span><i/><span>चुनौतीपूर्ण</span></div><div className="worksheet-meta"><span>✓ पिछली accuracy के अनुसार शुरुआत + क्रमशः बढ़ती कठिनाई</span><span>✓ Freemium: 30 प्रश्न तक मुफ़्त</span><span>✓ प्रश्न + समाधान एक PDF में</span></div><button className="btn primary" type="button" disabled={busy} onClick={generate}>{busy?"PDF तैयार हो रही है…":"PDF Worksheet डाउनलोड करें ↓"}</button>{notice&&<p className="worksheet-notice" role="status">{notice}</p>}<small className="worksheet-disclaimer">नोट: वर्तमान hybrid mode सत्यापित स्थिर प्रश्न बैंक और नियम-आधारित गणित variations का उपयोग करता है। बाहरी AI API/paid premium entitlement अभी configure नहीं है; PYQ के रूप में AI-generated प्रश्न प्रस्तुत नहीं किए जाते।</small></div>;
 }
