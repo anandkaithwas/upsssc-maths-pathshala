@@ -24,3 +24,6 @@
 .beta-feedback-status{padding:11px 13px;border-radius:9px;background:#effaf3;color:#28623e;font-size:12px}
 .beta-privacy-note{font-size:11px!important;color:#82899a!important}
 @media(max-width:620px){.beta-announcement{align-items:flex-start;gap:7px}.beta-announcement span{flex-basis:100%}.beta-feedback-card{padding:18px}.beta-feedback-fields{grid-template-columns:1fr}.beta-comments{grid-column:auto}}
+
+.beta-output-label{display:grid;gap:7px;margin-top:14px;color:#535e77;font-size:11px;font-weight:700}
+.beta-feedback-output{width:100%;padding:11px;border:1px solid #dfe2ec;border-radius:9px;background:#fff;color:#5c667c;font:inherit;font-size:11px;line-height:1.5;resize:vertical}
