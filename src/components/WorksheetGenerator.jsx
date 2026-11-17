@@ -1,5 +1,6 @@
 import React,{useMemo,useState} from "react";
 import {jsPDF} from "jspdf";
+import html2canvas from "html2canvas";
 import "./worksheet-generator.css";
 
 const bank={
@@ -71,25 +72,41 @@ export default function WorksheetGenerator({user}){
      const adaptive=history>=75?"challenging":history<40?"basic":"moderate";
      const qs=buildQuestions(subject,Math.min(count,freeLimit),adaptive);
      const doc=new jsPDF({unit:"mm",format:"a4"});
-     doc.setFont("helvetica","bold");doc.setFontSize(18);doc.text("UPSSSC MATHS PATHSHALA",14,18);
-     doc.setFont("helvetica","normal");doc.setFontSize(10);doc.text("Practice Worksheet | Mixed difficulty | 30-question default",14,25);
-     doc.text(`Subject: ${subject}   Questions: ${qs.length}   Date: ${new Date().toLocaleDateString("en-IN")}`,14,32);
-     let y=42;
-     qs.forEach((q,i)=>{
-       const lines=doc.splitTextToSize(`${i+1}. [${q.level.toUpperCase()}] ${q.q}`,180);
-       if(y+lines.length*5+25>280){doc.addPage();y=18;}
-       doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text(lines,14,y);y+=lines.length*5;
-       doc.setFont("helvetica","normal");doc.setFontSize(9);
-       q.o.forEach((o,j)=>{doc.text(`${String.fromCharCode(65+j)}. ${o}`,19,y);y+=4.5;});
-       y+=2;
-     });
-     doc.addPage();y=18;doc.setFont("helvetica","bold");doc.setFontSize(15);doc.text("Answer Key & Solutions",14,y);y+=10;
-     qs.forEach((q,i)=>{
-       const line=doc.splitTextToSize(`${i+1}. Answer: ${q.o[q.a]} — ${q.e}`,180);
-       if(y+line.length*5>280){doc.addPage();y=18;}
-       doc.setFont("helvetica","normal");doc.setFontSize(9);doc.text(line,14,y);y+=line.length*5+3;
-     });
-     doc.save(`UPSSSC-Worksheet-${subject.replace(/[^\p{L}\p{N}]+/gu,"-")}-${Date.now()}.pdf`);
+     const pages=[];
+     const escapeHtml=value=>String(value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+     const renderPage=async(title,content)=>{
+       const host=document.createElement("div");
+       host.style.cssText="position:fixed;left:-10000px;top:0;width:794px;background:#fff;color:#17213e;padding:42px;font-family:'Noto Sans Devanagari',Mangal,Arial,sans-serif;box-sizing:border-box;";
+       host.innerHTML=`<h1 style="font-size:25px;margin:0 0 12px;color:#4936a8">UPSSSC MATHS PATHSHALA</h1><h2 style="font-size:19px;margin:0 0 18px">${escapeHtml(title)}</h2><div style="font-size:13px;line-height:1.65">${content}</div><footer style="margin-top:24px;border-top:1px solid #ddd;padding-top:10px;font-size:10px;color:#69738a">Learn Smart. Calculate Fast. | Practice worksheet</footer>`;
+       document.body.appendChild(host);
+       try{return await html2canvas(host,{scale:2,backgroundColor:"#ffffff",useCORS:false});}finally{host.remove();}
+     };
+     const addCanvas=canvas=>{
+       const pageWidth=210,pageHeight=297;
+       const img=canvas.toDataURL("image/jpeg",.92);
+       const imageHeight=pageWidth*canvas.height/canvas.width;
+       let remaining=imageHeight,offset=0;
+       while(remaining>0){
+         if(pages.length||offset>0)doc.addPage();
+         doc.addImage(img,"JPEG",0,-offset,pageWidth,imageHeight,undefined,"FAST");
+         offset+=pageHeight;remaining-=pageHeight;
+       }
+       pages.push(true);
+     };
+     const chunks=[];
+     for(let i=0;i<qs.length;i+=5)chunks.push(qs.slice(i,i+5));
+     for(let p=0;p<chunks.length;p++){
+       const content=chunks[p].map((q,j)=>{
+         const n=p*5+j+1;
+         return `<article style="border-bottom:1px solid #e7e8ef;padding:0 0 13px;margin:0 0 14px"><b>${n}. [${q.level}] ${escapeHtml(q.q)}</b><div style="margin:8px 0 0 12px">${q.o.map((o,k)=>`<div>${String.fromCharCode(65+k)}. ${escapeHtml(o)}</div>`).join("")}</div></article>`;
+       }).join("");
+       addCanvas(await renderPage(`प्रश्न पत्र | ${subject} | भाग ${p+1}`,content));
+     }
+     for(let i=0;i<qs.length;i+=7){
+       const content=qs.slice(i,i+7).map((q,j)=>`<p style="margin:0 0 13px"><b>${i+j+1}. उत्तर: ${escapeHtml(q.o[q.a])}</b><br/>${escapeHtml(q.e)}</p>`).join("");
+       addCanvas(await renderPage(`उत्तर कुंजी और समाधान | भाग ${Math.floor(i/7)+1}`,content));
+     }
+     doc.save(`UPSSSC-Worksheet-${subject.replace(/[^\\p{L}\\p{N}]+/gu,"-")}-${Date.now()}.pdf`);
      setNotice("PDF तैयार है। इसमें प्रश्न और समाधान एक ही फ़ाइल में हैं।");
      localStorage.setItem("ump-worksheet-last-subject",subject);
    }catch(error){setNotice("PDF नहीं बन सकी। कृपया दोबारा प्रयास करें।");}
