@@ -1,0 +1,96 @@
+import React, { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase.js";
+
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const toDataUrl = file => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = () => reject(new Error("Image could not be read."));
+  reader.readAsDataURL(file);
+});
+
+export default function MathsCamera() {
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState("");
+  const [recognised, setRecognised] = useState("");
+  const [solution, setSolution] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!file) { setPreview(""); return; }
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  const chooseFile = event => {
+    const next = event.target.files?.[0];
+    event.target.value = "";
+    setError("");
+    setSolution(null);
+    setRecognised("");
+    if (!next) return;
+    if (!/^image\/(jpeg|png|webp|heic|heif)$/i.test(next.type)) {
+      setError("Please choose a JPG, PNG, WEBP or phone camera image.");
+      return;
+    }
+    if (next.size > MAX_IMAGE_BYTES) {
+      setError("Image is too large. Please use an image under 8 MB.");
+      return;
+    }
+    setFile(next);
+  };
+
+  const requestSolution = async (useRecognisedText = false) => {
+    if (!supabase) { setError("Student account service is not configured."); return; }
+    if (!file && !recognised.trim()) { setError("Take or upload a question image first."); return; }
+    setBusy(true); setError(""); setSolution(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Please sign in again to use Maths Camera.");
+      const payload = { questionText: useRecognisedText ? recognised.trim() : "" };
+      if (!useRecognisedText && file) payload.image = await toDataUrl(file);
+      const response = await fetch("/api/solve-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not solve this question. Please try again.");
+      setRecognised(data.recognisedQuestion || (useRecognisedText ? recognised : ""));
+      setSolution(data);
+    } catch (err) {
+      setError(err.message || "Something went wrong. Please try again.");
+    } finally { setBusy(false); }
+  };
+
+  return <section className="math-camera wrap" id="math-camera">
+    <div className="camera-intro">
+      <span className="eyebrow">YOUR AI DOUBT SOLVER</span>
+      <h2>Maths Camera <span>✦</span></h2>
+      <p>किताब, नोटबुक या handwritten सवाल की फोटो लें। हम सवाल पढ़कर आसान steps में हल समझाएँगे।</p>
+      <div className="camera-promises"><span>✓ Printed questions</span><span>✓ Handwritten questions</span><span>✓ Hindi & English</span></div>
+    </div>
+    <div className="camera-workspace">
+      <label className="camera-drop">
+        <input type="file" accept="image/*" capture="environment" onChange={chooseFile} />
+        {preview ? <img src={preview} alt="Selected question preview" /> : <span className="camera-placeholder"><b>▧</b><strong>Take a photo or upload an image</strong><small>Handwriting, notebook pages and printed questions</small></span>}
+      </label>
+      <div className="camera-controls">
+        <label className="btn secondary camera-pick">📷 Open camera / Choose image<input type="file" accept="image/*" capture="environment" onChange={chooseFile} /></label>
+        <button className="btn primary" type="button" disabled={busy || !file} onClick={() => requestSolution(false)}>{busy ? "Reading & solving…" : "Read and solve →"}</button>
+      </div>
+      <p className="camera-hint">Tip: Keep the page flat, use good light and include the complete question in the frame.</p>
+      {error && <p className="camera-error" role="alert">{error}</p>}
+      {recognised && <div className="recognised-box"><label htmlFor="recognised-question">Recognised question — correct anything we misread</label><textarea id="recognised-question" rows="3" value={recognised} onChange={e => setRecognised(e.target.value)} /><button className="btn secondary small" type="button" disabled={busy || !recognised.trim()} onClick={() => requestSolution(true)}>Solve corrected question ↻</button></div>}
+      {solution && <div className="camera-solution" aria-live="polite">
+        <div className="solution-top"><span className="eyebrow">STEP-BY-STEP SOLUTION</span><span className="solution-confidence">{solution.confidence || "Check the reading"}</span></div>
+        {solution.steps?.length ? <ol>{solution.steps.map((step, i) => <li key={i}>{step}</li>)}</ol> : <p>{solution.explanation || "No solution steps were returned."}</p>}
+        {solution.finalAnswer && <div className="final-answer"><small>FINAL ANSWER</small><b>{solution.finalAnswer}</b></div>}
+        {solution.caveat && <p className="camera-caveat">{solution.caveat}</p>}
+      </div>}
+      <p className="camera-privacy">Your image is sent securely to our configured AI solver for processing. Do not upload personal documents or images containing sensitive information.</p>
+    </div>
+  </section>;
+}
