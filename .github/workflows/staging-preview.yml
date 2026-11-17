@@ -1,0 +1,53 @@
+name: Deploy isolated Cloudflare Pages preview
+
+on:
+  push:
+    branches:
+      - audit/staging-hardening-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: upsssc-maths-pathshala-staging-preview
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    if: github.ref == 'refs/heads/audit/staging-hardening-v1'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout staging branch only
+        uses: actions/checkout@v4
+        with:
+          ref: audit/staging-hardening-v1
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Verify isolated staging target
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_PAGES_PROJECT: ${{ vars.CLOUDFLARE_STAGING_PROJECT }}
+        run: |
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_PAGES_PROJECT"
+          case "$CLOUDFLARE_PAGES_PROJECT" in
+            upsssc-maths-pathshala-staging) ;;
+            *) echo "Refusing non-staging Pages project"; exit 1 ;;
+          esac
+      - name: Deploy to isolated staging Pages project
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=upsssc-maths-pathshala-staging --branch=audit-staging-hardening-v1
