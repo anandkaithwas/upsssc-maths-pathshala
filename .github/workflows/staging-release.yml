@@ -42,8 +42,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: staging
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
       - name: Install dependencies
@@ -68,4 +68,4 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: "4.164.0"
-          command: pages deploy dist --project-name=upsssc-maths-pathshala-staging --branch=staging
+          command: pages deploy dist --project-name=upsssc-maths-pathshala-staging --branch=staging --commit-dirty=true
