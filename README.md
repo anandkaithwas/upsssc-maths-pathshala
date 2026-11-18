@@ -21,17 +21,17 @@ npm run preview
 Output directory: `dist`.
 
 ## Isolated staging deployment (never production)
-- Source branch: `audit/staging-hardening-v1`
+- Source branch: `integration/staging-release-2026-11-18`
 - Dedicated Pages project name: `upsssc-maths-pathshala-staging`
 - Build command: `npm ci && npm run build`
 - Output directory: `dist`
-- Workflow: `.github/workflows/staging-preview.yml`
+- Workflow: `.github/workflows/staging-release.yml`
 - GitHub environment: `staging`
 - Required environment secret: `CLOUDFLARE_ACCOUNT_ID`
 - Required environment secret: `CLOUDFLARE_API_TOKEN` (Cloudflare Pages deploy permissions only)
 - Required environment variable: `CLOUDFLARE_STAGING_PROJECT=upsssc-maths-pathshala-staging`
 
-The workflow only runs for this exact audit branch, hard-checks the dedicated staging project name, and deploys to that project. It never deploys to the production Pages project or production branch. Create the separate Cloudflare Pages project with this exact name and configure the GitHub Actions `staging` environment values before enabling the workflow.
+The release workflow runs only for the dedicated integration branch and deploys to the hard-coded `upsssc-maths-pathshala-staging` Cloudflare Pages project. It never deploys to the production Pages project. Configure the GitHub Actions `staging` environment with `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` secrets. Optional Supabase staging variables are `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. If Supabase is not configured, the site remains a read-only public preview; once configured, the learning area is restricted to invited student logins.
 
 Use a dedicated Supabase staging project. Apply `supabase/schema.sql` in its SQL Editor, then set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the GitHub Actions staging environment as repository/environment variables if runtime account features are being tested. Never put a Supabase service-role key in browser variables.
 
@@ -53,3 +53,7 @@ Checkout, payment verification, paid-file delivery, admin CMS, complete privacy 
 
 ## Automated PDF worksheet generator (staging)
 The worksheet builder defaults to 30 questions, supports mixed or subject-specific practice, increases difficulty across each worksheet, and includes answer key and explanations in the same PDF. It uses a verified sample bank plus deterministic arithmetic variations; it does not call an external AI model. Adaptive difficulty based on server-verified student performance and paid entitlements require backend configuration and are not represented as active in this prototype. Freemium currently means up to 30 downloadable questions per worksheet; no payment or premium gate is active.
+
+
+## Integrated staging release
+This branch combines the audited mobile-first UI, quiz progress persistence, worksheet generator, KaTeX rendering, and local-only student feedback. The staging beta login is invite-only when Supabase is configured. No payments, subscriptions, paid downloads, or production deployment are enabled.
