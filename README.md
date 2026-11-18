@@ -21,7 +21,7 @@ npm run preview
 Output directory: `dist`.
 
 ## Isolated staging deployment (never production)
-- Source branch: `integration/staging-release-2026-11-18`
+- Staging release branch: `staging` (promoted from `integration/staging-release-2026-11-18`)
 - Dedicated Pages project name: `upsssc-maths-pathshala-staging`
 - Build command: `npm ci && npm run build`
 - Output directory: `dist`
