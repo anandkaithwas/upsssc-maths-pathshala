@@ -1,0 +1,118 @@
+import React,{useMemo,useState} from "react";
+import {jsPDF} from "jspdf";
+import html2canvas from "html2canvas";
+import "./worksheet-generator.css";
+
+const bank={
+  गणित:[
+    {q:"240 का 25% कितना है?",o:["40","50","60","80"],a:2,e:"25% = 1/4; 240 ÷ 4 = 60."},
+    {q:"यदि 3 : 5 = x : 20, तो x क्या है?",o:["10","12","15","18"],a:1,e:"x = 3 × 20 ÷ 5 = 12."},
+    {q:"₹800 की वस्तु ₹920 में बेची। लाभ प्रतिशत?",o:["10%","12%","15%","20%"],a:2,e:"लाभ ₹120; 120 ÷ 800 × 100 = 15%."},
+    {q:"480 का 15% कितना है?",o:["62","68","72","75"],a:2,e:"10% = 48 और 5% = 24; कुल 72."},
+    {q:"12, 18 और 30 का HCF क्या है?",o:["3","6","9","12"],a:1,e:"तीनों का सबसे बड़ा समान भाजक 6 है."},
+    {q:"3/4 को प्रतिशत में लिखें।",o:["25%","50%","75%","80%"],a:2,e:"3 ÷ 4 × 100 = 75%."},
+    {q:"₹500 पर 10% छूट के बाद मूल्य?",o:["₹400","₹450","₹475","₹490"],a:1,e:"छूट ₹50; देय मूल्य ₹450."},
+    {q:"यदि किसी संख्या का 20% = 40 है, संख्या क्या है?",o:["100","160","200","240"],a:2,e:"संख्या = 40 × 100 ÷ 20 = 200."}
+  ],
+  रीजनिंग:[
+    {q:"श्रृंखला पूरी करें: 2, 6, 12, 20, 30, ?",o:["36","40","42","44"],a:2,e:"अंतर 4, 6, 8, 10; अगला 12, इसलिए 42."},
+    {q:"CAT को DBU लिखा जाता है, तो DOG कैसे लिखा जाएगा?",o:["EPH","EOG","FPH","DPH"],a:0,e:"हर अक्षर के बाद वाला अक्षर लिया गया है."},
+    {q:"इनमें से अलग कौन है?",o:["वर्ग","आयत","त्रिभुज","घन"],a:3,e:"घन 3-D आकृति है; शेष 2-D हैं."},
+    {q:"श्रृंखला: 5, 10, 20, 40, ?",o:["60","70","80","100"],a:2,e:"हर पद दोगुना है; 40 × 2 = 80."},
+    {q:"यदि A=1, B=2, तो D का मान?",o:["2","3","4","5"],a:2,e:"अंग्रेज़ी वर्णमाला में D चौथा अक्षर है."}
+  ],
+  हिंदी:[
+    {q:"‘अग्नि’ का पर्यायवाची शब्द?",o:["अनल","पवन","अंबर","नीर"],a:0,e:"अनल का अर्थ अग्नि है."},
+    {q:"‘उन्नति’ का विलोम?",o:["प्रगति","अवनति","विकास","समृद्धि"],a:1,e:"अवनति का अर्थ पतन है."},
+    {q:"‘नीलकमल’ में कौन-सा समास है?",o:["द्वंद्व","कर्मधारय","बहुव्रीहि","द्विगु"],a:1,e:"नीला है जो कमल — विशेषण-विशेष्य संबंध."},
+    {q:"‘जल’ का पर्यायवाची कौन-सा है?",o:["अनल","नीर","गगन","पवन"],a:1,e:"नीर जल का पर्यायवाची है."},
+    {q:"‘लाभ’ का विलोम शब्द?",o:["आय","हानि","वृद्धि","धन"],a:1,e:"हानि, लाभ का विलोम है."}
+  ],
+  "सामान्य अध्ययन":[
+    {q:"भारतीय संविधान कब अंगीकृत हुआ?",o:["15 अगस्त 1947","26 जनवरी 1950","26 नवंबर 1949","2 अक्टूबर 1949"],a:2,e:"संविधान 26 नवंबर 1949 को अंगीकृत हुआ."},
+    {q:"सौरमंडल का सबसे बड़ा ग्रह?",o:["शनि","पृथ्वी","बृहस्पति","मंगल"],a:2,e:"बृहस्पति सौरमंडल का सबसे बड़ा ग्रह है."},
+    {q:"भारत का राष्ट्रीय पशु कौन है?",o:["सिंह","बाघ","हाथी","हिम तेंदुआ"],a:1,e:"भारत का राष्ट्रीय पशु बाघ है."},
+    {q:"उत्तर प्रदेश की राजधानी?",o:["प्रयागराज","कानपुर","वाराणसी","लखनऊ"],a:3,e:"उत्तर प्रदेश की राजधानी लखनऊ है."},
+    {q:"भारत का संविधान कब लागू हुआ?",o:["26 नवंबर 1949","15 अगस्त 1947","26 जनवरी 1950","2 अक्टूबर 1950"],a:2,e:"संविधान 26 जनवरी 1950 को लागू हुआ."}
+  ]
+};
+const shuffle=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x;};
+const makeMathVariant=(level,i)=>{
+ const base=[{n:120,p:25},{n:360,p:15},{n:640,p:12.5},{n:800,p:7.5},{n:450,p:20},{n:720,p:5},{n:960,p:12.5},{n:560,p:15},{n:240,p:35},{n:1250,p:8}][i%10];
+ const n=base.n+(level==="challenging"?i*10:0), p=base.p;
+ const answer=n*p/100, opts=[answer,answer+5,answer-5,answer+10].map(v=>Number(v.toFixed(2)));
+ const order=shuffle(opts), correct=order.indexOf(Number(answer.toFixed(2)));
+ return {q:`${n} का ${p}% कितना है?`,o:order.map(v=>String(v)),a:correct,e:`${p}% = ${p/100}; ${n} × ${p/100} = ${answer}.`,level};
+};
+function buildQuestions(subject,count,adaptive){
+ const names=subject==="मिश्रित"?Object.keys(bank):[subject];
+ const pool=shuffle(names.flatMap(name=>bank[name].map(q=>({...q,subject:name,level:"basic"}))));
+ const output=[];
+ for(let i=0;i<count;i++){
+   const ratio=(i+1)/count;
+   const first=adaptive==="advanced"?.2:adaptive==="foundation"?.45:.34;
+   const second=adaptive==="advanced"?.5:adaptive==="foundation"?.75:.67;
+   const level=ratio<=first?"basic":ratio<=second?"moderate":"challenging";
+   if(subject==="गणित"||subject==="मिश्रित"&&i%4===0){
+     output.push({...makeMathVariant(level,i),subject:"गणित",level,source:"generated-variation"});
+   }else{
+     const candidates=pool.filter(q=>!output.some(x=>x.q===q.q));
+     const pick=candidates[0]||pool[i%pool.length];
+     output.push({...pick,level,source:"verified-bank"});
+   }
+ }
+ return output;
+}
+export default function WorksheetGenerator({user}){
+ const [subject,setSubject]=useState("मिश्रित"),[count,setCount]=useState(30),[busy,setBusy]=useState(false),[notice,setNotice]=useState("");
+ const [lastScore,setLastScore]=useState(()=>Number(localStorage.getItem("ump-worksheet-score")||60));
+ const freeLimit=30;
+ const generate=async()=>{
+   setBusy(true);setNotice("");
+   try{
+     const history=Number(localStorage.getItem("ump-worksheet-score")||0);
+     const adaptive=history>=75?"challenging":history<40?"basic":"moderate";
+     const qs=buildQuestions(subject,Math.min(count,freeLimit),adaptive);
+     const doc=new jsPDF({unit:"mm",format:"a4"});
+     const pages=[];
+     const escapeHtml=value=>String(value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"'"}[ch]));
+     const renderPage=async(title,content)=>{
+       const host=document.createElement("div");
+       host.style.cssText="position:fixed;left:-10000px;top:0;width:794px;background:#fff;color:#17213e;padding:42px;font-family:'Noto Sans Devanagari',Mangal,Arial,sans-serif;box-sizing:border-box;";
+       host.innerHTML=`<h1 style="font-size:25px;margin:0 0 12px;color:#4936a8">UPSSSC MATHS PATHSHALA</h1><h2 style="font-size:19px;margin:0 0 18px">${escapeHtml(title)}</h2><div style="font-size:13px;line-height:1.65">${content}</div><footer style="margin-top:24px;border-top:1px solid #ddd;padding-top:10px;font-size:10px;color:#69738a">Learn Smart. Calculate Fast. | Practice worksheet</footer>`;
+       document.body.appendChild(host);
+       try{return await html2canvas(host,{scale:2,backgroundColor:"#ffffff",useCORS:false});}finally{host.remove();}
+     };
+     const addCanvas=canvas=>{
+       const pageWidth=210,pageHeight=297;
+       const img=canvas.toDataURL("image/jpeg",.92);
+       const imageHeight=pageWidth*canvas.height/canvas.width;
+       let remaining=imageHeight,offset=0;
+       while(remaining>0){
+         if(pages.length||offset>0)doc.addPage();
+         doc.addImage(img,"JPEG",0,-offset,pageWidth,imageHeight,undefined,"FAST");
+         offset+=pageHeight;remaining-=pageHeight;
+       }
+       pages.push(true);
+     };
+     const chunks=[];
+     for(let i=0;i<qs.length;i+=5)chunks.push(qs.slice(i,i+5));
+     for(let p=0;p<chunks.length;p++){
+       const content=chunks[p].map((q,j)=>{
+         const n=p*5+j+1;
+         return `<article style="border-bottom:1px solid #e7e8ef;padding:0 0 13px;margin:0 0 14px"><b>${n}. [${q.level}] ${escapeHtml(q.q)}</b><div style="margin:8px 0 0 12px">${q.o.map((o,k)=>`<div>${String.fromCharCode(65+k)}. ${escapeHtml(o)}</div>`).join("")}</div></article>`;
+       }).join("");
+       addCanvas(await renderPage(`प्रश्न पत्र | ${subject} | भाग ${p+1}`,content));
+     }
+     for(let i=0;i<qs.length;i+=7){
+       const content=qs.slice(i,i+7).map((q,j)=>`<p style="margin:0 0 13px"><b>${i+j+1}. उत्तर: ${escapeHtml(q.o[q.a])}</b><br/>${escapeHtml(q.e)}</p>`).join("");
+       addCanvas(await renderPage(`उत्तर कुंजी और समाधान | भाग ${Math.floor(i/7)+1}`,content));
+     }
+     doc.save(`UPSSSC-Worksheet-${subject.replace(/[^\p{L}\p{N}]+/gu,"-")}-${Date.now()}.pdf`);
+     setNotice("PDF तैयार है। इसमें प्रश्न और समाधान एक ही फ़ाइल में हैं।");
+     localStorage.setItem("ump-worksheet-last-subject",subject);
+   }catch(error){setNotice("PDF नहीं बन सकी। कृपया दोबारा प्रयास करें।");}
+   finally{setBusy(false);}
+ };
+ return <div className="worksheet-panel"><div className="eyebrow">AUTOMATED PRACTICE BUILDER</div><h2>अपनी PDF Worksheet बनाएं</h2><p>विषय चुनें, प्रश्नों की संख्या तय करें और डाउनलोड करें। उत्तर व समाधान उसी PDF में मिलेंगे।</p><div className="worksheet-controls"><label>पिछली worksheet में आपकी accuracy<select value={lastScore} onChange={e=>{const value=Number(e.target.value);setLastScore(value);localStorage.setItem("ump-worksheet-score",String(value));}}><option value="20">40% से कम</option><option value="60">40–74%</option><option value="80">75% या अधिक</option></select></label><label>विषय<select value={subject} onChange={e=>setSubject(e.target.value)}><option>मिश्रित</option>{Object.keys(bank).map(x=><option key={x}>{x}</option>)}</select></label><label>प्रश्नों की संख्या<select value={count} onChange={e=>setCount(Number(e.target.value))}>{[10,20,30].map(n=><option key={n} value={n}>{n} प्रश्न</option>)}</select></label></div><div className="difficulty-track"><span>आसान</span><i/><span>मध्यम</span><i/><span>चुनौतीपूर्ण</span></div><div className="worksheet-meta"><span>✓ पिछली accuracy के अनुसार शुरुआत + क्रमशः बढ़ती कठिनाई</span><span>✓ Freemium: 30 प्रश्न तक मुफ़्त</span><span>✓ प्रश्न + समाधान एक PDF में</span></div><button className="btn primary" type="button" disabled={busy} onClick={generate}>{busy?"PDF तैयार हो रही है…":"PDF Worksheet डाउनलोड करें ↓"}</button>{notice&&<p className="worksheet-notice" role="status">{notice}</p>}<small className="worksheet-disclaimer">नोट: वर्तमान hybrid mode सत्यापित स्थिर प्रश्न बैंक और नियम-आधारित गणित variations का उपयोग करता है। बाहरी AI API/paid premium entitlement अभी configure नहीं है; PYQ के रूप में AI-generated प्रश्न प्रस्तुत नहीं किए जाते।</small></div>;
+}

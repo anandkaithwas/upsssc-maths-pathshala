@@ -1,0 +1,41 @@
+name: Worksheet generator staging preview
+on:
+  push:
+    branches:
+      - audit/general-quiz-progress-v1
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: upsssc-maths-pathshala-worksheet-staging
+  cancel-in-progress: true
+jobs:
+  build-test-deploy:
+    if: github.ref == 'refs/heads/audit/general-quiz-progress-v1'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/general-quiz-progress-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - run: npm run build
+      - name: Verify isolated staging deployment target
+        env:
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          PROJECT: ${{ vars.CLOUDFLARE_STAGING_PROJECT }}
+        run: |
+          test -n "$ACCOUNT"
+          test -n "$TOKEN"
+          test "$PROJECT" = "upsssc-maths-pathshala-staging"
+      - name: Deploy to isolated staging Pages project
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=upsssc-maths-pathshala-staging --branch=audit-general-quiz-progress-v1
