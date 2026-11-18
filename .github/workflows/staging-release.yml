@@ -22,8 +22,8 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
       - name: Install dependencies
@@ -63,8 +63,9 @@ jobs:
           test -n "$API_TOKEN" || { echo "Missing staging CLOUDFLARE_API_TOKEN secret"; exit 1; }
           test "$PROJECT_NAME" = "upsssc-maths-pathshala-staging"
       - name: Deploy to dedicated staging Pages project
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4.164.0"
           command: pages deploy dist --project-name=upsssc-maths-pathshala-staging --branch=staging
