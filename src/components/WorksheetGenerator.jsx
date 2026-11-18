@@ -50,7 +50,9 @@ function buildQuestions(subject,count,adaptive){
  const output=[];
  for(let i=0;i<count;i++){
    const ratio=(i+1)/count;
-   const first=adaptive==="advanced"?.2:adaptive==="foundation"?.45:.34;\n   const second=adaptive==="advanced"?.5:adaptive==="foundation"?.75:.67;\n   const level=ratio<=first?"basic":ratio<=second?"moderate":"challenging";
+   const first=adaptive==="advanced"?.2:adaptive==="foundation"?.45:.34;
+   const second=adaptive==="advanced"?.5:adaptive==="foundation"?.75:.67;
+   const level=ratio<=first?"basic":ratio<=second?"moderate":"challenging";
    if(subject==="गणित"||subject==="मिश्रित"&&i%4===0){
      output.push({...makeMathVariant(level,i),subject:"गणित",level,source:"generated-variation"});
    }else{
@@ -62,10 +64,10 @@ function buildQuestions(subject,count,adaptive){
  return output;
 }
 export default function WorksheetGenerator({user}){
- const [subject,setSubject]=useState("मिश्रित"),[count,setCount]=useState(30),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[lastScore,setLastScore]=useState(0);
+ const [subject,setSubject]=useState("मिश्रित"),[count,setCount]=useState(30),[busy,setBusy]=useState(false),[notice,setNotice]=useState("");
  const [lastScore,setLastScore]=useState(()=>Number(localStorage.getItem("ump-worksheet-score")||60));
  const freeLimit=30;
- const generate=()=>{
+ const generate=async()=>{
    setBusy(true);setNotice("");
    try{
      const history=Number(localStorage.getItem("ump-worksheet-score")||0);
@@ -73,7 +75,7 @@ export default function WorksheetGenerator({user}){
      const qs=buildQuestions(subject,Math.min(count,freeLimit),adaptive);
      const doc=new jsPDF({unit:"mm",format:"a4"});
      const pages=[];
-     const escapeHtml=value=>String(value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+     const escapeHtml=value=>String(value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"'"}[ch]));
      const renderPage=async(title,content)=>{
        const host=document.createElement("div");
        host.style.cssText="position:fixed;left:-10000px;top:0;width:794px;background:#fff;color:#17213e;padding:42px;font-family:'Noto Sans Devanagari',Mangal,Arial,sans-serif;box-sizing:border-box;";
@@ -106,7 +108,7 @@ export default function WorksheetGenerator({user}){
        const content=qs.slice(i,i+7).map((q,j)=>`<p style="margin:0 0 13px"><b>${i+j+1}. उत्तर: ${escapeHtml(q.o[q.a])}</b><br/>${escapeHtml(q.e)}</p>`).join("");
        addCanvas(await renderPage(`उत्तर कुंजी और समाधान | भाग ${Math.floor(i/7)+1}`,content));
      }
-     doc.save(`UPSSSC-Worksheet-${subject.replace(/[^\\p{L}\\p{N}]+/gu,"-")}-${Date.now()}.pdf`);
+     doc.save(`UPSSSC-Worksheet-${subject.replace(/[^\p{L}\p{N}]+/gu,"-")}-${Date.now()}.pdf`);
      setNotice("PDF तैयार है। इसमें प्रश्न और समाधान एक ही फ़ाइल में हैं।");
      localStorage.setItem("ump-worksheet-last-subject",subject);
    }catch(error){setNotice("PDF नहीं बन सकी। कृपया दोबारा प्रयास करें।");}
