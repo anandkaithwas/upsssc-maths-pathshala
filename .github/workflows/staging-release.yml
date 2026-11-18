@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - integration/staging-release-2026-11-18
+      - staging
   pull_request:
     branches:
       - integration/staging-release-2026-11-18
+      - staging
   workflow_dispatch:
 
 permissions:
@@ -65,4 +67,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=upsssc-maths-pathshala-staging --branch=staging-integration
+          command: pages deploy dist --project-name=upsssc-maths-pathshala-staging --branch=staging
