@@ -1,0 +1,70 @@
+name: Staging release
+
+on:
+  push:
+    branches:
+      - integration/staging-release-2026-11-18
+  pull_request:
+    branches:
+      - integration/staging-release-2026-11-18
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: upsssc-maths-pathshala-staging-release
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Unit and security tests
+        run: npm test
+      - name: Production build
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+        run: npm run build
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build isolated staging site
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+        run: npm run build
+      - name: Verify deployment target and credentials
+        env:
+          ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          PROJECT_NAME: upsssc-maths-pathshala-staging
+        run: |
+          test -n "$ACCOUNT_ID" || { echo "Missing staging CLOUDFLARE_ACCOUNT_ID secret"; exit 1; }
+          test -n "$API_TOKEN" || { echo "Missing staging CLOUDFLARE_API_TOKEN secret"; exit 1; }
+          test "$PROJECT_NAME" = "upsssc-maths-pathshala-staging"
+      - name: Deploy to dedicated staging Pages project
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=upsssc-maths-pathshala-staging --branch=staging-integration
