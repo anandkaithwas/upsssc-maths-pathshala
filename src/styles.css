@@ -47,3 +47,5 @@
 .beta-locked-card h1{font-size:clamp(26px,5vw,38px);color:#1b2543;margin:12px 0}
 .beta-locked-card p{color:#69758b;font-size:14px;line-height:1.7}
 .beta-locked-help{margin-top:16px!important;font-size:12px!important}
+
+.worksheet-launch-card{padding:28px;border:1px solid #e7e8f0;border-radius:18px;background:linear-gradient(120deg,#faf8ff,#fff)}.worksheet-launch-card h2{font-size:clamp(22px,3vw,30px);color:#1b2543;margin:9px 0}.worksheet-launch-card p{max-width:720px;color:#737d92;font-size:13px;line-height:1.7;margin:0 0 18px}
