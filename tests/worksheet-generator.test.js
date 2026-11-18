@@ -7,7 +7,7 @@ test("worksheet generator is mounted without replacing existing sections",()=>{
  assert.match(app,/WorksheetGenerator/);assert.match(app,/id="practice"/);assert.match(app,/id="resources"/);
 });
 test("worksheet defaults to 30 questions and includes same-file solutions",()=>{
- assert.match(component,/useState\(30\)/);assert.match(component,/Answer Key & Solutions/);assert.match(component,/doc\.save\(/);
+ assert.match(component,/useState\(30\)/);assert.match(component,/उत्तर कुंजी और समाधान/);assert.match(component,/doc\.save\(/);
 });
 test("worksheet uses mixed-difficulty progression and keeps generated variants labelled",()=>{
  assert.match(component,/basic/);assert.match(component,/moderate/);assert.match(component,/challenging/);assert.match(component,/generated-variation/);assert.match(component,/verified-bank/);
