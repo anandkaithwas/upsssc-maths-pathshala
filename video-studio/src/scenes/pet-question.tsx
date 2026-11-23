@@ -1,6 +1,5 @@
-import {makeScene2D} from '@motion-canvas/2d';
+import {makeScene2D, Circle, Line, Rect, Txt} from '@motion-canvas/2d';
 import {all, createRef, waitFor} from '@motion-canvas/core';
-import {Circle, Line, Rect, Txt} from '@motion-canvas/2d';
 
 export default makeScene2D(function* (view) {
   view.fill('#0b1020');
@@ -12,6 +11,7 @@ export default makeScene2D(function* (view) {
   const answer = createRef<Txt>();
   const prompt = createRef<Txt>();
   const accent = createRef<Circle>();
+  const rule = createRef<Line>();
 
   view.add(
     <>
@@ -59,6 +59,7 @@ export default makeScene2D(function* (view) {
         />
       </Rect>
       <Line
+        ref={rule}
         points={[[-330, 300], [330, 300]]}
         stroke="#5eead4"
         lineWidth={8}
@@ -96,10 +97,7 @@ export default makeScene2D(function* (view) {
   yield* all(card().opacity(1, 0.6), card().scale(1, 0.6));
   yield* question().opacity(1, 0.4);
   yield* waitFor(1.2);
-  yield* all(
-    prompt().opacity(1, 0.5),
-    view.children()[4].end(1, 0.6),
-  );
+  yield* all(prompt().opacity(1, 0.5), rule().end(1, 0.6));
   yield* waitFor(1.0);
   yield* answer().opacity(1, 0.5);
   yield* waitFor(1.0);
